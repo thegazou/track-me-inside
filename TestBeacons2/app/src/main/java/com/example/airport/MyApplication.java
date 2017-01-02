@@ -61,7 +61,7 @@ public class MyApplication extends Application {
                 /*Quand on rentre dans la classe le calcule de la position va se faire par trilatération à partir des trois beacons les plus proches.
                   */
                 // Vérifie qu'on est bien à portée de 3 beacons et que le plus éloingné est à une distance "résonnable"
-                if (list.size() <= 3 && powerToDistance(list.get(2).getMeasuredPower()) > 100) {
+                if (list.size() >= 3 && powerToDistance(list.get(2).getMeasuredPower()) > 100) {
                     Log.d("weakest beacon's signal", list.get(2).getProximityUUID().toString() + " has a signal strengh of " + list.get(2).getMeasuredPower());
                     String position = "0:0";
                     for (Beacon beacon:list) {
