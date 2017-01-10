@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private BeaconManager beaconManager;
     private Region region;
 
-    private double RSSI_Default = 1.02; // provient
+    private double RSSI_Default = -44; // provient de l'application estimote. [dBm]
     private List<Cercle> listCercles = new ArrayList<>();
     private Cercle estimatedPosition;
     //give the position of a beacon by its Major
@@ -65,32 +65,38 @@ public class MainActivity extends AppCompatActivity {
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
             public void onBeaconsDiscovered(Region region, List<Beacon> list) {
-                if (list.size() >= 3)
-                {
-                    //Log.d("list size", String.valueOf(list.size()));
-                    if(distanceToBeacon(list.get(2))>-1000) {
-                        //Log.d("weakest beacon's signal", list.get(2).getProximityUUID().toString() + " has a signal strengh of " + distanceToBeacon(list.get(2)));
-                        String position = "0:0";
-                        for (Beacon beacon : list) {
-                            if (POSITION_BY_BEACON.containsKey(beacon.getMinor())) {
-                                position = POSITION_BY_BEACON.get(beacon.getMinor());
-                            } else {
-                                //Log.e("wrong Major", "The major of a beacon match nothing");
+                //DEBUG
+                if (!list.isEmpty()) {
+                    Beacon test = list.get(0);
+                    Log.d("DEBUG:Name", String.valueOf(test.getProximityUUID()));
+                    Log.d("DEBUG:force du signal", String.valueOf(test.getRssi()));
+                    Log.d("DEBUG:distance", String.valueOf(distanceToBeacon(test)));
+                    if (list.size() >= 10) {
+                        if (distanceToBeacon(list.get(2)) > -1000) {
+                            Log.d("weakest beacon's signal", list.get(2).getProximityUUID().toString() + " has a signal strengh of " + distanceToBeacon(list.get(2)));
+                            String position = "0:0";
+                            for (Beacon beacon : list) {
+                                if (POSITION_BY_BEACON.containsKey(beacon.getMinor())) {
+                                    position = POSITION_BY_BEACON.get(beacon.getMinor());
+                                } else {
+                                    Log.e("wrong Major", "The major of a beacon match nothing");
+                                }
+                                // Le beacon et sa distance représente un cerle centré sur sa position et de rayon égal à sa distance au téléphonne.
+                                // Un objet cercle est instancié puis ajouté à une liste de cerles
+                                listCercles.add(new Cercle(Double.valueOf(position.split(":")[0]), Double.valueOf(position.split(":")[1]), distanceToBeacon(beacon)));
                             }
-                            // Le beacon et sa distance représente un cerle centré sur sa position et de rayon égal à sa distance au téléphonne.
-                            // Un objet cercle est instancié puis ajouté à une liste de cerles
-                            listCercles.add(new Cercle(Double.valueOf(position.split(":")[0]), Double.valueOf(position.split(":")[1]), distanceToBeacon(beacon)));
+                            Cercle myPosition = trilateration(listCercles);
+                            Log.d("Position brute", String.format("x=%1$.3f, y=%2$.3f", myPosition.x, myPosition.y));
+                            logMesure.add(myPosition);
+                            if (logMesure.size() == MESURE_COMPTE_FOR_ESTIMATION) {
+                                estimatedPosition = computeAveragePosition();
+                                Log.d("Position estimée", String.format("x=%1$.3f, y=%2$.3f", estimatedPosition.x, estimatedPosition.y));
+                            }
                         }
-                        Cercle myPosition = trilateration(listCercles);
-                        //Log.d("Position brute", String.format("x=%1$.3f, y=%2$.3f", myPosition.x, myPosition.y));
-                        logMesure.add(myPosition);
-                        if (logMesure.size() == MESURE_COMPTE_FOR_ESTIMATION) {
-                            estimatedPosition = computeAveragePosition();
-                            //Log.d("Position estimée", String.format("x=%1$.3f, y=%2$.3f", estimatedPosition.x, estimatedPosition.y));
-                        }
+                    } else {
+                        //showNotification("You're not in range of 3 beacons", "");
                     }
-                }else
-                    showNotification("You're not in range of 3 beacons", "");
+                }
             }
         });
         region = new Region("ranged region", null, null, null);
@@ -182,11 +188,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //TODO estimer la fonction qui permet de convertir la force du signal d'un beacon à la distance du beacon au téléphonne.
-    public double distanceToBeacon(Beacon beacon)
-    {
-        return Math.pow((RSSI_Default-beacon.getMeasuredPower())/20,10);
-        //return Math.pow((BEACON_EMISION_CONSTANT*RSSI_Default)/powerRecieved,1/2);
+
+
+    double distanceToBeacon(Beacon beacon) {
+    /*
+     * RSSI = TxPower - 10 * n * lg(d)
+     * n = 2 (in free space)
+     *
+     * d = 10 ^ ((TxPower - RSSI) / (10 * n))
+     */
+        int rssi=beacon.getRssi();
+        int txPower=beacon.getMeasuredPower();
+        return Math.pow(10d, ((double) txPower - rssi) / (10 * 2));
     }
+
 
     //Calcule la moyenne des positions calculées
     public Cercle computeAveragePosition()
