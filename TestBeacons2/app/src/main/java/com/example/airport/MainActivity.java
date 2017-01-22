@@ -325,6 +325,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * n = 2 (in free space)
      *
      * d = 10 ^ ((TxPower - RSSI) / (10 * n))
+     * RSSI est la force du signal reçu par le téléphone
+     * TxPower est la force du signal reçu par le téléphone à 1 mètre du beacon!
+     *
      */
 
 
