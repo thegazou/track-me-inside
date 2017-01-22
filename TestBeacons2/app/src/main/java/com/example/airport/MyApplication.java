@@ -24,13 +24,13 @@ import java.util.UUID;
 
 public class MyApplication extends Application {
 
-    private BeaconManager beaconManager;
+    //private BeaconManager beaconManager;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        beaconManager = new BeaconManager(getApplicationContext());
+        /*beaconManager = new BeaconManager(getApplicationContext());
         beaconManager.setMonitoringListener(new BeaconManager.MonitoringListener() {
             @Override
             public void onEnteredRegion(Region region, List<Beacon> list) {
@@ -47,7 +47,7 @@ public class MyApplication extends Application {
                 beaconManager.startMonitoring(new Region("monitored region",
                         null, 1, null));
             }
-        });
+        });*/
     }
 
 }
