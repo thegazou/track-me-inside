@@ -69,16 +69,16 @@ public class Trilateration {
         //take revert values, because lower distance then bigger weight
         for (int i = 0; i < size; i++)
             normalizeCoefficient += 1.0 / (listCercles.get(i).r * listCercles.get(i).r);
-        System.out.println("Normalized coef : "+normalizeCoefficient);
+
+        //System.out.println("Normalized coef : "+normalizeCoefficient);
 
         double[] tabWeight = new double[size];
-        //vector <double> weight( mBeaconMeas.size(), 0.0 );
 
         for (int i = 0; i < size; i++)
         {
 
             // calculate probability of being at beacons x,y coordinates
-            tabWeight[ i ] = 1.0 / (listCercles.get(i).r * listCercles.get(i).r *
+            tabWeight[i] = 1.0 / (listCercles.get(i).r * listCercles.get(i).r *
                     normalizeCoefficient );
             //System.out.println("weight "+ i+" : "+tabWeight[i]);
 
